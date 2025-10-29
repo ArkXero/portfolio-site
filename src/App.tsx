@@ -9,7 +9,7 @@ const LogoLoop = lazy(() => import('./components/ui/logo-loop'));
 
 // Memoized section components
 const HeroSection = memo(() => (
-  <div className="relative min-h-screen flex items-center justify-center p-8">
+  <div className="relative min-h-screen flex items-center justify-center p-8" style={{ zIndex: 1 }}>
     <div className="container mx-auto">
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold text-white mb-4">Portfolio</h1>
@@ -22,7 +22,7 @@ const HeroSection = memo(() => (
 
       <div className="mt-12 text-center">
         <p className="text-gray-400 text-sm">
-          Move your mouse over the card to see the holographic effect
+          Move your mouse over me!
         </p>
       </div>
     </div>
@@ -114,7 +114,7 @@ function App() {
   return (
     <div className="relative min-h-screen">
       {/* Lazy-loaded Starry Background */}
-      <Suspense fallback={<div className="fixed top-0 left-0 w-full h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 -z-10" />}>
+      <Suspense fallback={<div className="fixed top-0 left-0 w-full h-screen bg-black -z-10" />}>
         <AnimatedShaderBackground />
       </Suspense>
 
@@ -122,7 +122,13 @@ function App() {
       <HeroSection />
 
       {/* Gradient Transition Section - smooth fade from stars to solid background */}
-      <div className="relative bg-gradient-to-b from-transparent via-black/50 to-black h-32 -mt-32 z-10" />
+      <div
+        className="relative h-64 -mt-64 pointer-events-none"
+        style={{
+          zIndex: 2,
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.85) 75%, rgba(0,0,0,1) 100%)'
+        }}
+      />
 
       {/* Lazy-loaded Logo Loop Section */}
       <Suspense fallback={<div className="h-48 bg-black" />}>

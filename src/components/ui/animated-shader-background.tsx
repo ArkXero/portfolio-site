@@ -15,7 +15,7 @@ const AnimatedShaderBackground = memo(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) {
       // Show static gradient instead
-      container.style.background = 'linear-gradient(180deg, #0a0a1a 0%, #1a0a2a 50%, #0a0a1a 100%)';
+      container.style.background = 'linear-gradient(180deg, #0a0520 0%, #150a30 50%, #0a0520 100%)';
       return;
     }
 
@@ -25,20 +25,32 @@ const AnimatedShaderBackground = memo(() => {
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
     const renderer = new THREE.WebGLRenderer({
-      antialias: false, // Disable AA for better performance
-      alpha: false,
+      antialias: false,
+      alpha: true,
       powerPreference: 'high-performance'
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Limit pixel ratio
+    renderer.setClearColor(0x000000, 0);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.setSize(window.innerWidth, window.innerHeight);
     rendererRef.current = renderer;
-    container.appendChild(renderer.domElement);
+
+    // Make sure canvas is properly positioned
+    const canvas = renderer.domElement;
+    canvas.style.position = 'absolute';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.display = 'block';
+
+    container.appendChild(canvas);
 
     const material = new THREE.ShaderMaterial({
       uniforms: {
         iTime: { value: 0 },
         iResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
       },
+      transparent: true,
       vertexShader: `
         void main() {
           gl_Position = vec4(position, 1.0);
@@ -67,13 +79,13 @@ const AnimatedShaderBackground = memo(() => {
 
         float fbm(vec2 x) {
           float v = 0.0;
-          float a = 0.3;
+          float a = 0.5;
           vec2 shift = vec2(100);
           mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
           for (int i = 0; i < NUM_OCTAVES; ++i) {
             v += a * noise(x);
             x = rot * x * 2.0 + shift;
-            a *= 0.4;
+            a *= 0.5;
           }
           return v;
         }
@@ -85,22 +97,26 @@ const AnimatedShaderBackground = memo(() => {
 
           float f = 2.0 + fbm(p + vec2(iTime * 3.0, 0.0)) * 0.5;
 
-          // Reduced from 35 to 20 iterations for better performance
-          for (float i = 0.0; i < 20.0; i++) {
+          // Star streak effect - 25 iterations for good visibility
+          for (float i = 0.0; i < 25.0; i++) {
             v = p + cos(i * i + (iTime + p.x * 0.08) * 0.025 + i * vec2(13.0, 11.0)) * 3.5;
+
+            // Brighter, more vibrant colors
             vec4 auroraColors = vec4(
-              0.1 + 0.3 * sin(i * 0.2 + iTime * 0.4),
-              0.3 + 0.5 * cos(i * 0.3 + iTime * 0.5),
+              0.3 + 0.5 * sin(i * 0.2 + iTime * 0.4),
+              0.4 + 0.6 * cos(i * 0.3 + iTime * 0.5),
               0.7 + 0.3 * sin(i * 0.4 + iTime * 0.3),
               1.0
             );
+
             vec4 currentContribution = auroraColors * exp(sin(i * i + iTime * 0.8)) / length(max(v, vec2(v.x * f * 0.015, v.y * 1.5)));
-            float thinnessFactor = smoothstep(0.0, 1.0, i / 20.0) * 0.6;
+            float thinnessFactor = smoothstep(0.0, 1.0, i / 25.0) * 0.8;
             o += currentContribution * thinnessFactor;
           }
 
-          o = tanh(pow(o / 100.0, vec4(1.6)));
-          gl_FragColor = o * 1.5;
+          // Much less compression - make it brighter!
+          o = tanh(pow(o / 30.0, vec4(1.2)));
+          gl_FragColor = vec4(o.rgb * 3.0, 1.0);
         }
       `
     });
@@ -112,7 +128,7 @@ const AnimatedShaderBackground = memo(() => {
 
     let frameId: number;
     let lastTime = 0;
-    const targetFPS = 30; // Limit to 30 FPS for better performance
+    const targetFPS = 30;
     const frameInterval = 1000 / targetFPS;
 
     const animate = (currentTime: number) => {
@@ -137,7 +153,7 @@ const AnimatedShaderBackground = memo(() => {
         const height = window.innerHeight;
         renderer.setSize(width, height);
         material.uniforms.iResolution.value.set(width, height);
-      }, 150); // Debounce resize
+      }, 150);
     };
 
     window.addEventListener('resize', handleResize);
@@ -147,8 +163,8 @@ const AnimatedShaderBackground = memo(() => {
       window.removeEventListener('resize', handleResize);
       clearTimeout(resizeTimeout);
 
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
+      if (container.contains(canvas)) {
+        container.removeChild(canvas);
       }
 
       geometry.dispose();
@@ -164,8 +180,11 @@ const AnimatedShaderBackground = memo(() => {
   return (
     <div
       ref={containerRef}
-      className="fixed top-0 left-0 w-full h-screen -z-10"
-      style={{ willChange: 'auto' }}
+      className="fixed top-0 left-0 w-full h-screen pointer-events-none"
+      style={{
+        zIndex: 0,
+        willChange: 'auto'
+      }}
     />
   );
 });

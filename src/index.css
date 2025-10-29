@@ -54,7 +54,14 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-color: #000000;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+  html {
+    background-color: #000000;
   }
 }
 
