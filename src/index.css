@@ -70,7 +70,7 @@
   position: relative;
   width: 300px;
   height: 200px;
-  background: linear-gradient(135deg, #d30b0b 7.5%, #ffffff 50%, #257fbe 80%);
+  background: linear-gradient(135deg, #212020 30%, #ffffff 50%, #257fbe 80%);
   border-radius: 20px;
   overflow: hidden;
   cursor: pointer;
